@@ -1,0 +1,24 @@
+ST131Finder 1.3.0
+
+Current release
+  97114e1c8e6b9b7106a8f9699125ea0bcbf93e073f3e2f2478953a57b3a52ab0  st131finder-v1.3.0.html
+  c775cb3c1f9b275e5b89bd4d8bc5c2d883decb84cd9af4ce34c9e6b8fa5cf76d  algorithm source (script from the assay-definition marker to </script>)
+  89e9166a635090c044669978cc47568d73595e044e403542b7ceb9a6f3f2479a  db.json (uncompressed reference database)
+
+Validated build (version 1.0.0 — the build that generated the performance values in the paper)
+  434d2d1cb0941db6130aefe2da6f8cbf5cbabcad979c27a49955056dfe3da41f  st131finder-v1.0.0.html
+  b2c66eaded52ebe38896961dd2cce4d26ec32e1312e02c49efebb3e78e41f1c7  algorithm source
+  89e9166a635090c044669978cc47568d73595e044e403542b7ceb9a6f3f2479a  db.json (unchanged)
+
+Intermediate build (version 1.2.0)
+  526aeeaa575dec03273d0e9bb93c903503db9c4960e63e072094ee666f9c2dbd  st131finder-v1.2.0.html
+  bb374d45b40b431c31c9ca78ff8292d568eb63da2f971422d131467bf2468a18  algorithm source
+  89e9166a635090c044669978cc47568d73595e044e403542b7ceb9a6f3f2479a  db.json (unchanged)
+
+The reference database is identical across all versions.
+index.html is a byte-identical copy of st131finder-v1.3.0.html and therefore carries the
+same digest as the current release.
+
+Verify the release file with:  shasum -a 256 st131finder-v1.3.0.html
+The algorithm and database hashes are also printed at the foot of the page itself,
+so any result can be traced to the exact build that produced it.
