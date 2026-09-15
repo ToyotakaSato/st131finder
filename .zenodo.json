@@ -1,0 +1,30 @@
+{
+  "title": "ST131Finder",
+  "description": "<p>A single-file browser tool that assigns <i>Escherichia coli</i> ST131 clade by in silico PCR without relying on the <i>ybbW</i> marker, reports every isolate under all five published ST131 nomenclatures, and returns MLST, <i>fimH</i>, O:H serotype, QRDR genotype and acquired resistance genes in the same pass. All computation runs in the browser; sequence data never leaves the operator's machine.</p><p>Version 1.3.0 derives the Price et al. (2013) label from the clade assignment rather than from the <i>ybbW</i> marker, so that clade C2 isolates lacking the <i>ybbW</i> SNP are still reported as H30Rx.</p>",
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "version": "1.3.0",
+  "language": "eng",
+  "creators": [
+    {
+      "name": "Sato, Toyotaka",
+      "affiliation": "Laboratory of Veterinary Hygiene, Faculty of Veterinary Medicine, Hokkaido University, Sapporo, Japan"
+    }
+  ],
+  "keywords": [
+    "Escherichia coli",
+    "ST131",
+    "clade typing",
+    "in silico PCR",
+    "antimicrobial resistance",
+    "genomic epidemiology"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1128/aac.00179-17",
+      "relation": "cites",
+      "scheme": "doi"
+    }
+  ]
+}
