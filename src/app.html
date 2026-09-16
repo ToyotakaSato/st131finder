@@ -1,0 +1,982 @@
+<title>ST131Finder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F2F5F4; --surface:#FFFFFF; --surface-2:#E9EEEC;
+  --ink:#131E1C; --ink-2:#3C4F4B; --muted:#667874; --line:#D7E0DD; --line-2:#C3CFCB;
+  --accent:#0B6E63; --accent-ink:#FFFFFF; --accent-soft:#DCEDE9;
+  --pos:#0B6E63; --neg:#93A5A1; --warn:#B4610F; --warn-soft:#FBEBDA;
+  --cA:#5A6B7D; --cB:#2A6FA8; --cM27:#B33450; --cnM27:#C0730E; --cC2:#1B7A63; --cCo:#79608F; --cNone:#78857F;
+  --shadow:0 1px 2px rgba(16,32,29,.05),0 8px 24px -12px rgba(16,32,29,.18);
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1312; --surface:#161C1B; --surface-2:#1D2523;
+    --ink:#E8EFED; --ink-2:#BCC9C6; --muted:#8B9B97; --line:#26302E; --line-2:#33403D;
+    --accent:#43B9A7; --accent-ink:#06201C; --accent-soft:#152B27;
+    --pos:#43B9A7; --neg:#5E6E6A; --warn:#E39A4A; --warn-soft:#2C2115;
+    --cA:#8B9CAE; --cB:#5A9FD4; --cM27:#E5657F; --cnM27:#E29A3C; --cC2:#41B394; --cCo:#A98DC0; --cNone:#6B7874;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1312; --surface:#161C1B; --surface-2:#1D2523;
+  --ink:#E8EFED; --ink-2:#BCC9C6; --muted:#8B9B97; --line:#26302E; --line-2:#33403D;
+  --accent:#43B9A7; --accent-ink:#06201C; --accent-soft:#152B27;
+  --pos:#43B9A7; --neg:#5E6E6A; --warn:#E39A4A; --warn-soft:#2C2115;
+  --cA:#8B9CAE; --cB:#5A9FD4; --cM27:#E5657F; --cnM27:#E29A3C; --cC2:#41B394; --cCo:#A98DC0; --cNone:#6B7874;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+h1,h2,h3,h4{font-family:Archivo,"Hiragino Kaku Gothic ProN",sans-serif;margin:0;text-wrap:balance;letter-spacing:-.015em}
+a{color:var(--accent)}
+.lab{font-family:Archivo,sans-serif;font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* header */
+header{border-bottom:1px solid var(--line);background:var(--surface);margin-bottom:32px}
+.hd{max-width:1180px;margin:0 auto;padding:26px 24px 24px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.hd .t{flex:1 1 420px;min-width:280px}
+h1{font-size:27px;font-weight:700;line-height:1.2}
+.sub{color:var(--ink-2);margin-top:7px;max-width:62ch;font-size:14.5px}
+.cite{margin-top:14px;font-size:12.5px;color:var(--muted);border-left:2px solid var(--line-2);padding-left:11px;max-width:62ch}
+.privacy{flex:0 0 auto;border:1px solid var(--line);border-radius:var(--r);padding:11px 14px;background:var(--accent-soft);max-width:270px}
+.privacy p{margin:5px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+
+/* dropzone */
+.drop{border:1.5px dashed var(--line-2);border-radius:14px;background:var(--surface);padding:38px 24px;text-align:center;transition:border-color .15s,background .15s;cursor:pointer}
+.drop:hover,.drop:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.drop.over{border-color:var(--accent);border-style:solid;background:var(--accent-soft)}
+.drop h2{font-size:17px;font-weight:600}
+.drop p{margin:6px 0 0;color:var(--muted);font-size:13.5px}
+.btn{margin-top:16px;display:inline-block;background:var(--accent);color:var(--accent-ink);border:0;border-radius:7px;padding:9px 20px;font-family:Archivo,sans-serif;font-weight:600;font-size:14px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line-2)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* progress */
+#status{margin-top:18px;display:none}
+#status.on{display:block}
+.bar{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.stat{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* result card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-top:26px;overflow:hidden}
+.card > .top{display:grid;grid-template-columns:230px 1fr;gap:0}
+@media(max-width:820px){.card > .top{grid-template-columns:1fr}}
+.gelbox{background:#0B100F;padding:20px 16px;display:flex;justify-content:center;align-items:center}
+.main{padding:20px 22px}
+.fname{font-size:12.5px;color:var(--muted);word-break:break-all}
+.verdict{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 2px}
+.verdict .v{font-family:Archivo,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.sero{font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--ink-2);letter-spacing:.01em}
+.chip{display:inline-block;border-radius:999px;padding:3px 11px;font-family:Archivo,sans-serif;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#fff}
+.note{margin-top:10px;font-size:13px;background:var(--warn-soft);border-left:3px solid var(--warn);padding:9px 12px;border-radius:0 6px 6px 0;color:var(--ink-2)}
+.meta{margin-top:12px;display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.meta b{color:var(--ink);font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+.scroll{overflow-x:auto}
+th{text-align:left;font-family:Archivo,sans-serif;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 6px 0;white-space:nowrap;border-bottom:1px solid var(--line)}
+td{padding:6px 10px 6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.pill{font-family:Archivo,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.05em;padding:2px 8px;border-radius:5px;display:inline-block}
+.pill.y{background:var(--accent-soft);color:var(--accent)}
+.pill.n{background:var(--surface-2);color:var(--neg)}
+.pill.w{background:var(--warn-soft);color:var(--warn)}
+.grp td{padding-top:14px;border-bottom:1px solid var(--line-2)}
+.grp span{font-family:Archivo,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.mut{color:var(--warn);font-weight:600}
+.wt{color:var(--muted)}
+
+.nomen{border-top:1px solid var(--line);background:var(--surface-2);padding:14px 22px 16px}
+.nomen h4{font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:Archivo,sans-serif}
+.nrow{display:grid;grid-template-columns:190px 175px 1fr;gap:14px;align-items:baseline;padding:6px 0;border-bottom:1px dotted var(--line)}
+.nrow:last-child{border-bottom:0}
+@media(max-width:820px){.nrow{grid-template-columns:1fr;gap:2px;padding:9px 0}}
+.nrow .ref{font-size:12.5px;color:var(--ink-2)}
+.nrow .ref em{display:block;font-size:11.5px;color:var(--muted);font-style:normal}
+.nrow .val{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:500;color:var(--ink)}
+.nrow .val.dim{color:var(--muted);font-weight:400}
+.nrow .why{font-size:12.5px;color:var(--muted)}
+.panels{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+@media(max-width:820px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--surface);padding:16px 20px 18px;min-width:0}
+.panel h4{font-size:13px;font-weight:600;margin-bottom:9px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:3px 0;border-bottom:1px dotted var(--line)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;font-family:Archivo,sans-serif;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+.aln{font-family:"IBM Plex Mono",monospace;font-size:11.5px;white-space:pre;color:var(--ink-2);margin-top:10px;line-height:1.45;overflow-x:auto;padding-bottom:4px}
+.aln .mm{color:var(--warn);font-weight:600}
+.aln .term{text-decoration:underline;text-underline-offset:2px}
+.foot{margin-top:44px;border-top:1px solid var(--line);padding-top:22px;color:var(--muted);font-size:13px;max-width:74ch}
+.foot h3{font-size:14px;color:var(--ink);margin-bottom:8px}
+.foot ul{margin:0 0 16px;padding-left:18px}
+.foot li{margin:3px 0}
+#summary{display:none;margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px 14px}
+#summary.on{display:block}
+#summary h3{font-size:14px;font-weight:600;margin-bottom:4px}
+#summary p{margin:0 0 12px;font-size:12.5px;color:var(--muted)}
+#summary a{text-decoration:none;border-bottom:1px solid transparent}
+#summary a:hover{border-bottom-color:var(--accent)}
+#summary td{padding:7px 12px 7px 0}
+.seq{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
+.cldot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px;vertical-align:1px}
+.no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.04em;
+  border:1px solid var(--line-2);border-radius:5px;padding:1px 7px;margin-right:9px;vertical-align:3px}
+.tools{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.dlmsg{font-size:13px;color:var(--muted)}
+.dlmsg.warn{color:var(--warn)}
+#exp{display:none;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+#exp.on{display:block}
+#exp textarea{width:100%;height:150px;margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.5;
+  background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:10px;resize:vertical}
+#exp .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#exp .hint{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.band{animation:dev .5s ease-out both}
+@keyframes dev{from{opacity:0}to{opacity:1}}
+</style>
+
+<header>
+  <div class="hd">
+    <div class="t">
+      <h1>ST131Finder</h1>
+      <p class="sub">Assign clade and subclade (A / B0 / B1 / C0 / C1-M27 / C1-nM27 / C2) to <i>Escherichia coli</i> ST131 assemblies by in silico PCR. Each run also reports MLST, O:H serotype, <i>gyrA</i>/<i>parC</i> QRDR substitutions and acquired resistance genes including ESBLs.</p>
+      <p class="cite">Implements the primer set in Table 1 and the interpretation matrix in Table 2 of Matsumura Y, Pitout JDD, Peirano G, et al. Rapid identification of different <i>Escherichia coli</i> sequence type 131 clades. <i>Antimicrob Agents Chemother</i> 2017;61:e00179-17.</p>
+    </div>
+    <div class="privacy">
+      <div class="lab">Data handling</div>
+      <p>Sequences are processed entirely in your browser and never leave your machine, so unpublished assemblies can be analysed as they are.</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose FASTA files">
+    <h2>Drop assembly FASTA files here</h2>
+    <p>.fna / .fasta / .fa / .fsa / .txt — analyse many isolates at once, a few seconds each</p>
+    <button class="btn" id="pick" type="button">Choose files</button>
+    <input type="file" id="file" multiple accept=".fna,.fa,.fasta,.fsa,.seq,.txt" hidden>
+  </div>
+
+  <div id="status">
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="stat mono" id="pstat">Starting…</div>
+  </div>
+
+  <div id="summary"></div>
+  <div id="results"></div>
+
+  <div class="tools" id="tools" style="display:none">
+    <button class="btn" id="csv" type="button">Download CSV</button>
+    <button class="btn ghost" id="json" type="button">Download JSON</button>
+    <button class="btn ghost" id="showtext" type="button">Show as text</button>
+    <button class="btn ghost" id="clear" type="button">Clear</button>
+    <span class="dlmsg" id="dlmsg" role="status" aria-live="polite"></span>
+  </div>
+  <div id="exp">
+    <div class="row"><span class="lab" id="expname">CSV</span>
+      <button class="btn ghost" id="expcopy" type="button" style="margin-top:0">Copy to clipboard</button>
+      <button class="btn ghost" id="expclose" type="button" style="margin-top:0">Close</button></div>
+    <textarea id="exptext" readonly spellcheck="false"></textarea>
+    <p class="hint">Select all and copy if you would rather paste the table straight into a spreadsheet or notebook.</p>
+  </div>
+
+  <div class="foot">
+    <h3>How calls are made, and what the tool cannot do</h3>
+    <ul>
+      <li><b>Allele-specific primers.</b> The published primers carry deliberate internal mismatches, so an exact match is the wrong test. A band is called when the 3&prime;-terminal base matches, no more than two mismatches occur anywhere in the primer, and the product is within 25 bp of the expected size. Open &ldquo;Show primer alignments&rdquo; on any positive assay to see the bases the call rests on.</li>
+      <li><b>Draft assemblies.</b> An amplicon that straddles a contig boundary is scored negative. When M27PP1 is negative but the <i>aer</i> SNP assay is positive, the isolate is still reported as C1-M27 and a warning explains why.</li>
+      <li><b>Order of results.</b> Browsers hand over multi-file selections in an unpredictable order, so files are sorted by name (numeric-aware) before analysis. The most recently analysed isolate appears at the top; run numbers on the cards follow the order of analysis.</li>
+      <li><b>fimH and subclone assays.</b> <i>fimH</i>30, 22, 27, 35 and 41, the H30Rx <i>ybbW</i> SNP, <i>rfb</i> O25b/O16 and <i>fliC</i> H4/H5 are called with the primers of Johnson et al. 2022. Clade C isolates normally carry <i>fimH</i>30, but alternative alleles occur, so the two calls are reported independently and a warning appears when they disagree.</li>
+      <li><b>Not a substitute for PCR or WGS phylogeny.</b> These are in silico calls. For epidemiological work, confirm clade assignment by core-genome phylogeny.</li>
+      <li><b>Reference data.</b> MLST uses the PubMLST <i>Escherichia coli</i> #1 (Achtman) scheme; resistance genes use ResFinder; O and H antigen alleles come from the ECTyper set. Databases were retrieved in August 2026.</li>
+    <h3 style="margin-top:22px">References</h3>
+    <ol style="margin:0 0 16px;padding-left:20px">
+      <li>Price LB, Johnson JR, Aziz M, et al. The epidemic of extended-spectrum-&beta;-lactamase-producing <i>Escherichia coli</i> ST131 is driven by a single highly pathogenic subclone, H30-Rx. <i>mBio</i> 2013;4:e00377-13. — defines H30, H30R and H30Rx.</li>
+      <li>Petty NK, Ben Zakour NL, Stanton-Cook M, et al. Global dissemination of a multidrug resistant <i>Escherichia coli</i> clone. <i>Proc Natl Acad Sci USA</i> 2014;111:5694–5699. — defines clades A, B and C.</li>
+      <li>Ben Zakour NL, Alsheikh-Hussain AS, Ashcroft MM, et al. Sequential acquisition of virulence and fluoroquinolone resistance has shaped the evolution of <i>Escherichia coli</i> ST131. <i>mBio</i> 2016;7:e00347-16. — defines subclades B0 and C0 and the intermediate clade.</li>
+      <li>Stoesser N, Sheppard AE, Pankhurst L, et al. Evolutionary history of the global emergence of the <i>Escherichia coli</i> epidemic clone ST131. <i>mBio</i> 2016;7:e02162-15. — defines C1 and C2 and the global evolutionary history.</li>
+      <li>Matsumura Y, Pitout JDD, Peirano G, et al. Rapid identification of different <i>Escherichia coli</i> sequence type 131 clades. <i>Antimicrob Agents Chemother</i> 2017;61:e00179-17. — defines C0, C1-nM27, C1-M27 and C2, and the assay implemented here.</li>
+    </ol>
+    <p style="margin-bottom:16px">Assay sources: Johnson JR, Johnston BD, Porter SB, et al. <i>Microbiol Spectr</i> 2022;10:e01064-22 (<i>fimH</i>, <i>ybbW</i>, <i>rfb</i> and <i>fliC</i> primers); Banerjee R, Johnston B, Lohse C, et al. <i>Antimicrob Agents Chemother</i> 2013;57:6385–6388 (H30Rx <i>ybbW</i> SNP); Clermont O, Dhanji H, Upton M, et al. <i>J Antimicrob Chemother</i> 2008;61:1024–1028 (O25b <i>pabB</i> PCR).</p>
+    <p id="verline" class="mono" style="font-size:12px;color:var(--muted);margin-bottom:14px"></p>
+    <p>For research use. Not intended for diagnostic purposes. Cite the studies above when reporting lineage assignments.</p>
+  </div>
+</div>
+
+<script id="dbz" type="application/octet-stream">__DBZ_BASE64__</script>
+<script>
+"use strict";
+/* Frozen release. The algorithm hash covers this script from the assay-definition
+   marker below to the end, so stamping the version never changes it. */
+const VERSION={v:"__VER__",built:"__BUILT__",algo:"__ALGO__",db:"__DB__"};
+/* ============================ assay definitions ============================ */
+const ASSAYS=[
+ {k:"A",  name:"Clade A specific (region 4)",     F:"TGACGGGACGTGAGCAAATTA", R:"AGTCAGACCTAGCCACCCTT",  size:707},
+ {k:"ST", name:"ST131 specific (region 19)",      F:"AGCAACGATATTTGCCCATT",  R:"GGCGATAACAGTACGCCATT",  size:580},
+ {k:"B",  name:"Clade B specific (prfC SNP)",     F:"CAACGTTGAAGCAGTGTATGAG",R:"TGACAATCGACGGCTTTAGA",  size:442},
+ {k:"C1", name:"Clade C1 specific",               F:"GGCCCCACAAATTGCTT",     R:"CGCACCTCCGATACCAAA",    size:337},
+ {k:"M27",name:"C1-M27 specific (M27PP1)",        F:"TGAATCAAAGGTCCGAGCTG",  R:"TATGGCTGGCAGATGCTTTA",  size:232},
+ {k:"C2", name:"Clade C2 specific (nrdI SNP)",    F:"ACGGATTCAGGTAGACGATT",  R:"CCTCACCAAAGTTGCGATTAC", size:164},
+ {k:"C",  name:"Clade C specific (mgtA SNP)",     F:"CGCTGGCCAGTTATCTGAAAT", R:"CCTTTCACCAACTGGGTTACT", size:103}
+];
+const EXTRA=[
+ {k:"aer", name:"C1-M27 subclade assay (aer SNP)",   F:"GCCGATGGGCTTTCCT",       R:"GTCACCGCGTCTTCCAGT",     size:140},
+ {k:"O25b",name:"O25b specific (pabB)",              F:"TCCAGCAGGTGCTGGATCGT",   R:"GCGAAATTTTTCGCCGTACTGT", size:347}
+];
+/* fimH allele and subclone assays — primers from Johnson JR et al.,
+   Microbiol Spectr 2022;10:e01064-22 (Table 3); ybbW targets the H30Rx SNP of Banerjee et al. 2013 */
+const SUBCLONE=[
+ {k:"fimH30", name:"fimH30",                 F:"GCCAATGGTACCGCTATT",      R:"GCTTTAATCGCCACCCCA",       size:350},
+ {k:"fimH22", name:"fimH22",                 F:"TGGGGCAAAACCTGGTCGTG",    R:"CAGCTTTAATCGCCACTCCC",     size:279},
+ {k:"fimH27", name:"fimH27 group (H23/24/25/27/54/64)",                 F:"TGGGGCAAAACCTGGTCGTG",    R:"TGACATCACGAGCAGAAACATCG",  size:417},
+ {k:"fimH35", name:"fimH35 group (H32/35)",                 F:"CTGTAAAACCGCCAATGGTACA",  R:"TGACATCACGAGCAGAAACATCG",  size:500},
+ {k:"fimH41", name:"fimH41",                 F:"CTGTAAAACCGCCAATGGTACA",  R:"TTTGCCCCACATTCACGGCG",     size:92},
+ {k:"ybbW",   name:"H30Rx marker (ybbW SNP)",F:"GTTGCGGTCTGGGCA",         R:"TCCAGCACGTTCCAGGTG",       size:188},
+ {k:"rfbO25b",name:"O25b specific (rfb)",    F:"GAAGGTGTTACCACCATCAATG",  R:"ATGCTATTCATTATGCGCAGC",    size:557},
+ {k:"rfbO16", name:"O16 specific (rfb)",     F:"GAAGGTGTTACCACCATCAATG",  R:"CAGGATCATTTATGCTGGTACG",   size:732},
+ {k:"fliCH4", name:"fliC H4",                F:"GGCGAAACTGACGGCTGCTG",    R:"ACCAACAGTTACCGCCGC",       size:199},
+ {k:"fliCH5", name:"fliC H5",                F:"CGTTCAAGCGACGACCGGG",     R:"ATGTTACATATCCCGCAGCCGA",   size:614},
+ {k:"plsB",   name:"Clade B1 marker (plsB)", F:"AGAATTCCGGCGCGTTG",       R:"CGCGAGCAGTTAACCG",         size:619},
+ {k:"nupC",   name:"Clade B marker (nupC)",  F:"TCCCGCAATCGTATGTACACC",   R:"ATCCATCATCGCAACGAAC",      size:500}
+];
+const ALLASSAYS=()=>ASSAYS.concat(EXTRA,SUBCLONE);
+const MAXMM=2, SIZETOL=25;
+
+const CLADECOL={"A":"--cA","B":"--cB","B0":"--cB","B1":"--cB","C1-M27":"--cM27","C1-nM27":"--cnM27","C2":"--cC2",
+ "C0/C3":"--cCo","Unclassified":"--cCo","non-ST131":"--cNone"};
+
+/* ============================ sequence helpers ============================ */
+const CMAP=new Uint8Array(128).fill(78);
+CMAP[65]=84;CMAP[67]=71;CMAP[71]=67;CMAP[84]=65;
+function rc(s){
+  const n=s.length,o=new Uint8Array(n);
+  for(let i=0;i<n;i++)o[i]=CMAP[s.charCodeAt(n-1-i)];
+  let out="";const CH=8192;
+  for(let i=0;i<n;i+=CH)out+=String.fromCharCode.apply(null,o.subarray(i,Math.min(i+CH,n)));
+  return out;
+}
+function parseFasta(txt){
+  const out=[];let name=null,buf=[];
+  for(const line of txt.split(/\r?\n/)){
+    if(!line)continue;
+    if(line[0]===">"){ if(name!==null)out.push({name,seq:buf.join("")}); name=line.slice(1).split(/\s+/)[0]||("contig"+(out.length+1)); buf=[]; }
+    else if(line[0]===";"){}
+    else buf.push(line.trim());
+  }
+  if(name!==null)out.push({name,seq:buf.join("")});
+  return out.filter(c=>c.seq.length>0).map(c=>{
+    const seq=c.seq.toUpperCase().replace(/[^ACGT]/g,"N");
+    return {name:c.name,seq,rcs:rc(seq)};
+  });
+}
+
+/* 5'-anchored seed search in primer orientation */
+function findSites(primer,text){
+  const n=primer.length,res=new Map();
+  for(let off=0;off<3;off++){
+    if(off+11>n)break;
+    const seed=primer.substr(off,11);
+    let i=text.indexOf(seed);
+    while(i!==-1){
+      const st=i-off;
+      if(st>=0&&st+n<=text.length){
+        const sub=text.substr(st,n);
+        const mm=[];let bad=false;
+        for(let k=0;k<n;k++) if(sub.charCodeAt(k)!==primer.charCodeAt(k)){
+          const d=n-1-k;
+          if(d===0){bad=true;break;}
+          mm.push(d);
+          if(mm.length>MAXMM){bad=true;break;}
+        }
+        if(!bad&&!res.has(st))res.set(st,{pos:st,mm,gseq:sub});
+      }
+      i=text.indexOf(seed,i+1);
+    }
+  }
+  return [...res.values()];
+}
+function pcr(assay,contigs){
+  for(const c of contigs){
+    const L=c.seq.length;
+    const Fp=findSites(assay.F,c.seq),Rm=findSites(assay.R,c.rcs);
+    const Fm=findSites(assay.F,c.rcs),Rp=findSites(assay.R,c.seq);
+    for(const [fs,rs] of [[Fp,Rm],[Fm,Rp]]){
+      for(const f of fs) for(const q of rs){
+        const len=(L-q.pos)-f.pos;
+        if(len>0&&Math.abs(len-assay.size)<=SIZETOL)
+          return {pos:true,len,contig:c.name,F:f,R:q};
+      }
+    }
+  }
+  return {pos:false};
+}
+
+/* ============================ MLST ============================ */
+const FNV_OFF=0xcbf29ce484222325n,FNV_P=0x100000001b3n,M64=0xFFFFFFFFFFFFFFFFn;
+function fnv64(str){let h=FNV_OFF;for(let i=0;i<str.length;i++){h^=BigInt(str.charCodeAt(i));h=(h*FNV_P)&M64;}return h.toString(16);}
+function mlst(db,contigs){
+  const alleles={},loci=Object.keys(db.mlst);
+  for(const g of loci){
+    const spec=db.mlst[g];
+    let found=tryLocus(spec,contigs,false);
+    /* a locus whose 25-mer seeds all carry a SNP in this genome: retry with each seed
+       split in half, so one intact half still anchors the allele */
+    if(!found)found=tryLocus(spec,contigs,true);
+    alleles[g]=found;
+  }
+  const complete=loci.every(g=>alleles[g]);
+  const st=complete?(db.profiles[loci.map(g=>alleles[g]).join("-")]||null):null;
+  return {alleles,st,complete};
+}
+function tryLocus(spec,contigs,split){
+  for(const c of contigs){
+    for(const t of [c.seq,c.rcs]){
+      for(const sd of spec.seeds){
+        const seed=sd[0],off=sd[1];
+        const probes=split?[[seed.slice(0,12),off],[seed.slice(12),off+12]]:[[seed,off]];
+        for(const [pr,po] of probes){
+          let i=t.indexOf(pr);
+          while(i!==-1){
+            const st0=i-po;
+            if(st0>=0){
+              for(const L of spec.L){
+                if(st0+L<=t.length){
+                  const a=spec.h[fnv64(t.substr(st0,L))];
+                  if(a)return a;
+                }
+              }
+            }
+            i=t.indexOf(pr,i+1);
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/* ============================ QRDR ============================ */
+const AATAB="FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
+const B4=new Int8Array(128).fill(-1);
+B4[84]=0;B4[67]=1;B4[65]=2;B4[71]=3;               /* T,C,A,G */
+function translate(s,f){
+  const n=s.length,m=Math.floor((n-f)/3),out=new Array(m);
+  let j=0;
+  for(let i=f;i+3<=n;i+=3){
+    const a=B4[s.charCodeAt(i)],b=B4[s.charCodeAt(i+1)],c=B4[s.charCodeAt(i+2)];
+    out[j++]=(a<0||b<0||c<0)?"X":AATAB[a*16+b*4+c];
+  }
+  return out.join("");
+}
+function qrdr(contigs){
+  const res={gyrA:null,parC:null};
+  for(const c of contigs){
+    for(const t of [c.seq,c.rcs]){
+      for(let f=0;f<3;f++){
+        const p=translate(t,f);
+        let i=p.indexOf("HPHGD");
+        while(i!==-1){
+          const seg=p.substr(i,17);
+          if(seg.length===17){
+            const tail=seg.slice(13,17);
+            if(tail==="RMAQ"&&!res.gyrA)res.gyrA={ctx:seg,c83:seg[5],c87:seg[9]};
+            else if(tail==="LMAQ"&&!res.parC)res.parC={ctx:seg,c80:seg[5],c84:seg[9]};
+          }
+          i=p.indexOf("HPHGD",i+1);
+        }
+        if(res.gyrA&&res.parC)return res;
+      }
+    }
+  }
+  return res;
+}
+
+/* ============================ AMR (Bloom filter prefilter + exact verify) ============================ */
+const K=25,STEP=6,P4=Math.pow(4,K-1);
+const BITS=1<<26;                       /* 64 Mbit = 8 MB */
+function bloomOfGenome(contigs){
+  const bits=new Uint8Array(BITS>>3);
+  const MASK=BITS-1;
+  for(const c of contigs){
+    const s=c.seq;let code=0,run=0;
+    for(let i=0;i<s.length;i++){
+      const b=B4[s.charCodeAt(i)];
+      if(b<0){code=0;run=0;continue;}
+      code=(code%P4)*4+b;run++;
+      if(run>=K){
+        const lo=code%4294967296,hi=Math.floor(code/4294967296);
+        let h1=(Math.imul(lo,0x9E3779B1)^Math.imul(hi,0x85EBCA77))>>>0;
+        let h2=(Math.imul(lo^0xC2B2AE35,0x27D4EB2F)+hi)>>>0;
+        for(let g=0;g<3;g++){
+          const idx=(h1+Math.imul(g,h2))>>>0&MASK;
+          bits[idx>>3]|=1<<(idx&7);
+        }
+      }
+    }
+  }
+  return bits;
+}
+function bloomCoverage(bits,seq){
+  const MASK=BITS-1;let code=0,run=0,tot=0,hit=0;
+  for(let i=0;i<seq.length;i++){
+    const b=B4[seq.charCodeAt(i)];
+    if(b<0){code=0;run=0;continue;}
+    code=(code%P4)*4+b;run++;
+    if(run>=K&&((i-K+1)%STEP===0)){
+      tot++;
+      const lo=code%4294967296,hi=Math.floor(code/4294967296);
+      let h1=(Math.imul(lo,0x9E3779B1)^Math.imul(hi,0x85EBCA77))>>>0;
+      let h2=(Math.imul(lo^0xC2B2AE35,0x27D4EB2F)+hi)>>>0;
+      let ok=true;
+      for(let g=0;g<3;g++){
+        const idx=(h1+Math.imul(g,h2))>>>0&MASK;
+        if(!(bits[idx>>3]&(1<<(idx&7)))){ok=false;break;}
+      }
+      if(ok)hit++;
+    }
+  }
+  return tot?hit/tot:0;
+}
+function verifyGene(seq,contigs,probeLen,maxAnchors,good){
+  const PL=probeLen||20, MA=maxAnchors||16, GOOD=good||1;
+  let best=null;
+  const anchors=[];
+  const step=Math.max(PL,Math.floor((seq.length-PL)/(MA-1))||PL);
+  for(let a=0;a+PL<=seq.length&&anchors.length<MA;a+=step)anchors.push(a);
+  if(anchors[anchors.length-1]!==seq.length-PL)anchors.push(seq.length-PL);
+  for(const an of anchors){
+    if(an<0)continue;
+    const probe=seq.substr(an,PL);
+    for(const c of contigs){
+      for(const t of [c.seq,c.rcs]){
+        let p=t.indexOf(probe);
+        while(p!==-1){
+          const st=p-an;
+          if(st>=0&&st+seq.length<=t.length){
+            const sub=t.substr(st,seq.length);
+            let m=0;for(let k=0;k<seq.length;k++)if(sub.charCodeAt(k)===seq.charCodeAt(k))m++;
+            const id=m/seq.length;
+            if(!best||id>best.id)best={id};
+            if(best.id===1)return best;
+          }
+          p=t.indexOf(probe,p+1);
+        }
+      }
+    }
+    /* once a full-length alignment above the reporting threshold is found,
+       further anchors would only re-discover the same locus */
+    if(best&&best.id>=GOOD)return best;
+  }
+  return best;
+}
+let AMR_RC=null;
+const famOf=g=>/^bla/.test(g)?g.replace(/_[0-9]+$/,"").replace(/-[0-9]+[a-z]?$/,""):g.replace(/_[0-9]+$/,"");
+function amrScan(db,contigs,bits){
+  if(!AMR_RC)AMR_RC=db.amr.map(g=>rc(g[2]));
+  let cands=[];
+  for(let i=0;i<db.amr.length;i++){
+    const cov=Math.max(bloomCoverage(bits,db.amr[i][2]),bloomCoverage(bits,AMR_RC[i]));
+    if(cov>=0.6)cands.push({i,cov});
+  }
+  cands.sort((a,b)=>b.cov-a.cov);
+  const perFam=new Map();
+  cands=cands.filter(c=>{const f=famOf(db.amr[c.i][0]);const n=perFam.get(f)||0;if(n>=4)return false;perFam.set(f,n+1);return true;});
+  const out=[];
+  for(const cd of cands.slice(0,60)){
+    const g=db.amr[cd.i];
+    const v=verifyGene(g[2],contigs,25,4,0.95);
+    if(v&&v.id>=0.95)out.push({gene:g[0],drug:g[1],id:v.id,cov:cd.cov,len:g[2].length});
+  }
+  const best=new Map();
+  for(const v of out){
+    const f=famOf(v.gene),cur=best.get(f);
+    if(!cur||v.id>cur.id)best.set(f,v);
+  }
+  return [...best.values()].sort((a,b)=>b.id-a.id||a.gene.localeCompare(b.gene));
+}
+
+/* ============================ clade logic (Table 2) ============================ */
+/* Clade B is divisible. Ben Zakour et al. placed B0 in the intermediate population
+   between clades B and C, and resolved the remainder of clade B into subclades B1-B5.
+   Johnson et al. separate B0 from the rest with a plsB assay: plsB is present in
+   non-B0 clade B, which they report as B1, and absent in B0. A negative plsB is only
+   informative when the clade B marker nupC amplified from the same assembly; otherwise
+   the plsB locus may simply be missing from a fragmented draft. */
+function bsub(p){
+  if(p.plsB.pos) return {sub:"B1",note:null};
+  if(p.nupC.pos) return {sub:"B0",note:null};
+  return {sub:null,note:"Clade B, but neither the plsB nor the nupC amplicon was recovered, so B0 and B1 cannot be separated in this assembly."};
+}
+/* An isolate is accepted as ST131 when the region 19 amplicon is recovered OR when
+   in silico MLST returns an exact ST131 profile at all seven loci. Before v1.2.0 a
+   negative region 19 result overrode the MLST evidence at this point, which
+   misreported fragmented ST131 assemblies as non-ST131. */
+function callClade(p,st){
+  const A=p.A.pos,ST=p.ST.pos,B=p.B.pos,C1=p.C1.pos,M27=p.M27.pos,C2=p.C2.pos,C=p.C.pos,AER=p.aer.pos;
+  const mlstST131 = st==="131";
+  const notes=[];
+  if(!ST&&!mlstST131){
+    if(A||B||C1||M27||C2||C)notes.push("The ST131-specific band is negative although clade-specific bands were detected. The assembly may be fragmented across the region 19 locus, or a non-ST131 lineage may be cross-reacting.");
+    return {clade:"non-ST131",notes};
+  }
+  if(!ST&&mlstST131)notes.push("The region 19 amplicon was not recovered, but in silico MLST returns an exact ST131 profile at all seven loci, so the isolate is treated as ST131. The region 19 locus is probably split across a contig boundary.");
+  if(A) return {clade:"A",notes:B||C?["Clade A was called alongside bands from another clade. Check the assembly for a mixed culture or contamination."]:[]};
+  if(B){
+    const bs=bsub(p), bn=[];
+    if(C)bn.push("Clade B and clade C are both positive, which the assay does not expect. Check the assembly for a mixed culture.");
+    if(bs.note)bn.push(bs.note);
+    if(bs.sub==="B0")bn.push("plsB is negative while nupC amplified, which places the isolate at B0 — the position Ben Zakour et al. described as intermediate between clades B and C. Confirm by core-genome phylogeny if the distinction matters.");
+    return {clade:"B",sub:bs.sub,notes:bn};
+  }
+  if(C||C1||C2||M27){
+    if(!C&&(C1||C2)) notes.push("The clade C band (mgtA) is negative while a C subclade is positive. The mgtA amplicon may straddle a contig boundary in this assembly.");
+    if(C1){
+      if(M27) return {clade:"C1-M27",notes};
+      if(AER){ notes.push("M27PP1 is negative but the aer SNP assay is positive. In draft assemblies the M27PP1 primer site often falls beyond a contig end. The isolate is reported as C1-M27; confirm by PCR if the distinction matters."); return {clade:"C1-M27",notes}; }
+      return {clade:"C1-nM27",notes};
+    }
+    if(C2) return {clade:"C2",notes};
+    return {clade:"C0/C3",notes:notes.concat(["Clade C but neither C1 nor C2. Ben Zakour et al. defined subclade C0 as the ancestor of C1 and C2, and this is where C1/C2-negative clade C isolates sit. Matsumura et al. later split a further lineage, C3, out of the same group; the assay cannot separate C0 from C3, so confirm by core-genome phylogeny if the distinction matters."])};
+  }
+  return {clade:"Unclassified",notes:["Only the ST131-specific band is positive, so no clade could be assigned. This pattern fits the intermediate lineages between clades B and C, such as subclade I1."]};
+}
+
+/* ============================ lineage nomenclature ============================ */
+/* fimH reporting. Validated against 200 sequenced genomes (Maeda et al. 2026):
+   the fimH30 and fimH41 assays were specific (64/64 and 10/10, no false positives),
+   and fimH22 is specific once fimH27 is required to be negative. The fimH27 and
+   fimH35 primer pairs share primers with their neighbours and, run singly in silico,
+   also amplify fimH23/24/25/54/64 and fimH32 respectively, so they are reported as
+   groups rather than as allele calls. */
+const FIMH_ORDER=["fimH30","fimH22","fimH41"];
+function fimHcall(p){
+  if(p.fimH30.pos&&!p.fimH22.pos&&!p.fimH35.pos)return {allele:"fimH30",group:null};
+  if(p.fimH41.pos&&!p.fimH35.pos)return {allele:"fimH41",group:null};
+  if(p.fimH22.pos&&!p.fimH27.pos)return {allele:"fimH22",group:null};
+  if(p.fimH27.pos)return {allele:null,group:"fimH27 group (H23/24/25/27/54/64)"};
+  if(p.fimH35.pos)return {allele:null,group:"fimH35 group (H32/35)"};
+  return {allele:null,group:null};
+}
+function lineage(p,q,cl){
+  const fc=fimHcall(p);
+  const hits=FIMH_ORDER.filter(k=>p[k].pos);
+  const fimH=fc.allele;
+  const gA=q.gyrA?((q.gyrA.c83!=="S")+(q.gyrA.c87!=="D")):0;
+  const pC=q.parC?((q.parC.c80!=="S")+(q.parC.c84!=="E")):0;
+  const fqr=gA>=2&&pC>=1;                       /* gyrA double + parC: the H30R genotype */
+  const isC=/^C/.test(cl.clade);
+  const notes=[];
+
+  /* The Price label is derived from the clade, not from a marker. Stoesser et al.
+     state that C1 and C2 correspond to H30R and H30Rx, so reading the label off the
+     clade keeps the five frameworks internally consistent and stops an amplicon lost
+     to assembly fragmentation from propagating into the nomenclature. ybbW and fimH30
+     are reported as corroborating evidence and are noted when they disagree.
+     Only where no clade could be assigned does the label fall back to the markers. */
+  let price,priceNote;
+  if(cl.clade==="non-ST131"){ price="n/a"; priceNote="Not ST131."; }
+  else if(cl.clade==="C2"){
+    price="H30Rx";
+    priceNote=p.ybbW.pos?"Clade C2, which Stoesser et al. equate with H30Rx; the ybbW SNP corroborates it."
+                        :"Clade C2, which Stoesser et al. equate with H30Rx. The ybbW SNP is absent, so a ybbW-based assay would not have recognised this isolate as H30Rx.";
+  }
+  else if(cl.clade==="C1-M27"||cl.clade==="C1-nM27"){ price="H30R"; priceNote="Clade C1, which Stoesser et al. equate with H30R."; }
+  else if(cl.clade==="C0/C3"){ price=fqr?"H30R":"H30"; priceNote=fqr?"Ancestral clade C carrying the full QRDR quartet.":"Ancestral clade C without the full QRDR quartet."; }
+  else if(cl.clade==="Unclassified"){
+    price=p.fimH30.pos?(fqr?"H30R":"H30"):(fimH?`non-H30 (${fimH})`:"non-H30");
+    priceNote="No clade could be assigned, so this label rests on the fimH and QRDR markers alone.";
+  }
+  else { price=fimH?`non-H30 (${fimH})`:"non-H30"; priceNote="Clade "+cl.clade+", outside the H30 lineage that Price et al. defined."; }
+
+  let petty=cl.clade==="A"?"Clade A":cl.clade==="B"?"Clade B":isC?"Clade C":
+            cl.clade==="Unclassified"?"Intermediate / unassigned":"n/a";
+  const pettyNote=cl.clade==="A"?"The most divergent clade, carrying fimH41.":cl.clade==="B"?"fimH22, with gyrA and parC alleles consistent with fluoroquinolone susceptibility.":
+        isC?"fimH30 with the gyrA-1AB and parC-1aAB resistance alleles — the clade behind the global expansion.":
+        cl.clade==="Unclassified"?"Falls between clades B and C.":"Not ST131.";
+
+  let zakour,zakourNote;
+  if(cl.clade==="non-ST131"){ zakour="n/a"; zakourNote="Not ST131."; }
+  else if(cl.clade==="A"){ zakour="Clade A"; zakourNote="Not subdivided in this study."; }
+  else if(cl.clade==="B"){
+    if(cl.sub==="B0"){ zakour="B0"; zakourNote="B0 — placed in this study in the intermediate population between clades B and C, together with C0."; }
+    else if(cl.sub==="B1"){ zakour="B1 (non-B0 clade B)"; zakourNote="plsB-positive, so not B0. Reported as B1 following Johnson et al.; note that this study resolved clade B proper into five subclades, B1 to B5, which the assay cannot separate."; }
+    else { zakour="Clade B"; zakourNote="Clade B was split into B0 and subclades B1 to B5; neither plsB nor nupC amplified here, so the position within clade B is undetermined."; }
+  }
+  else if(cl.clade==="C0/C3"){ zakour="C0"; zakourNote="The ancestor of C1 and C2. With B0 it forms the intermediate clade between B and C."; }
+  else if(isC){ zakour="Post-C0"; zakourNote="Descended from C0, the C1/C2 ancestor defined in this study."; }
+  else { zakour="Intermediate clade"; zakourNote="The B0/C0 region between clades B and C."; }
+
+  let stoesser,stoesserNote;
+  if(!isC){ stoesser="n/a"; stoesserNote="C1 and C2 are subdivisions of clade C."; }
+  else if(p.C1.pos){ stoesser="C1"; stoesserNote="C1 (H30R), the CTX-M-15-poor branch of clade C."; }
+  else if(p.C2.pos){ stoesser="C2"; stoesserNote="C2 (H30Rx), the CTX-M-15-associated branch."; }
+  else { stoesser="Clade C, neither C1 nor C2"; stoesserNote="Basal to the C1/C2 split."; }
+
+  const matsNote=cl.clade==="C1-M27"?"The CTX-M-27-associated subclade driving the recent Japanese expansion.":
+        cl.clade==="C1-nM27"?"C1 without the M27 prophage-like region.":
+        cl.clade==="C2"?"Equivalent to H30Rx.":
+        cl.clade==="C0/C3"?"Subclade C0, or the C3 lineage split out in the same study.":
+        cl.clade==="Unclassified"?"Possibly subclade I1, described in the same study.":"";
+
+  /* cross-framework consistency */
+  if(p.fimH30.pos&&(cl.clade==="A"||cl.clade==="B"))
+    notes.push(`fimH30 is positive but the clade assay calls ${cl.clade}. Alternative fimH alleles do occur, so a clade call should not be inferred from fimH alone.`);
+  if(isC&&!p.fimH30.pos)
+    notes.push(hits.length?`Clade C isolates normally carry fimH30, but this one types as ${fimH}. Worth confirming by fimH sequencing.`:"Clade C isolates normally carry fimH30, but no fimH amplicon was recovered from this assembly. The Price label is taken from the clade, not from fimH.");
+  if(p.ybbW.pos&&!p.C2.pos)
+    notes.push("The ybbW SNP (H30Rx) is present without a C2 band. H30Rx and C2 usually coincide.");
+  if(p.C2.pos&&!p.ybbW.pos)
+    notes.push("C2 is positive but the ybbW SNP is absent. Matsumura et al. reported one such C2 genome, so the ybbW assay alone can miss C2.");
+  if(p.fimH30.pos&&(p.fimH22.pos||p.fimH35.pos))
+    notes.push("More than one fimH assay is positive alongside fimH30. Check the assembly for a mixed culture.");
+  return {fimH:fc.allele,fimHgroup:fc.group,fqr,
+          rows:[
+            {tag:"Price et al. 2013",   src:"mBio 4:e00377-13",     val:price,     note:priceNote},
+            {tag:"Petty et al. 2014",   src:"PNAS 111:5694",        val:petty,     note:pettyNote},
+            {tag:"Ben Zakour et al. 2016",src:"mBio 7:e00347-16",    val:zakour,    note:zakourNote},
+            {tag:"Stoesser et al. 2016",src:"mBio 7:e02162-15",     val:stoesser,  note:stoesserNote},
+            {tag:"Matsumura et al. 2017",src:"AAC 61:e00179-17",    val:cl.clade,  note:matsNote}
+          ],notes};
+}
+
+/* ============================ O and H serotyping ============================ */
+const RC_CACHE=new Map();
+function rcList(list){
+  if(!RC_CACHE.has(list))RC_CACHE.set(list,list.map(g=>rc(g[2])));
+  return RC_CACHE.get(list);
+}
+function bestAntigen(list,bits,contigs,minId,cap){
+  const rcs=rcList(list),sc=[];
+  for(let i=0;i<list.length;i++){
+    const cov=Math.max(bloomCoverage(bits,list[i][2]),bloomCoverage(bits,rcs[i]));
+    if(cov>=0.15)sc.push({i,cov});
+  }
+  sc.sort((a,b)=>b.cov-a.cov);
+  let best=null;
+  for(const c of sc.slice(0,cap)){
+    const v=verifyGene(list[c.i][2],contigs,18,16,minId);
+    if(v&&v.id>=minId&&(!best||v.id>best.id))best={type:list[c.i][0],gene:list[c.i][1],id:v.id};
+  }
+  return best;
+}
+function serotype(db,bits,contigs,pabB,p){
+  const O=bestAntigen(db.oh.O,bits,contigs,0.90,25);
+  const H=bestAntigen(db.oh.H,bits,contigs,0.95,12);
+  let o=O?O.type:null, h=H?H.type:null, oNote=null;
+  const o25b=pabB||p.rfbO25b.pos, o16=p.rfbO16.pos;
+  if(o25b){ if(!o||o==="O25")o="O25b"; else oNote=`An O25b PCR is positive but the closest O-antigen allele was ${O.type}.`; }
+  else if(o16){ if(!o||o==="O16")o="O16"; else oNote=`The O16 rfb PCR is positive but the closest O-antigen allele was ${O.type}.`; }
+  else if(o==="O25") o="O25 (O25b PCR negative)";
+  if(p.fliCH4.pos&&(!h||h==="H4"))h="H4";
+  else if(p.fliCH5.pos&&(!h||h==="H5"))h="H5";
+  return {O:o,Oid:O?O.id:null,Ogene:O?O.gene:null,H:h,Hid:H?H.id:null,note:oNote};
+}
+
+/* ============================ rendering ============================ */
+function gel(p){
+  const W=200,H=310,top=22,bot=286;
+  const smin=Math.log10(90),smax=Math.log10(1100);
+  const y=s=>bot-((Math.log10(s)-smin)/(smax-smin))*(bot-top);
+  const ladder=[1000,700,500,400,300,200,100];
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:200px" role="img" aria-label="Simulated gel of the ST131 clade assay">`;
+  g+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0B100F"/>`;
+  g+=`<rect x="26" y="${top-8}" width="52" height="${bot-top+22}" fill="#121A18"/>`;
+  g+=`<rect x="92" y="${top-8}" width="82" height="${bot-top+22}" fill="#121A18"/>`;
+  for(const s of ladder){
+    const yy=y(s);
+    g+=`<rect x="30" y="${yy-1.6}" width="44" height="3.2" rx="1.4" fill="#4E605C"/>`;
+    g+=`<text x="20" y="${yy+3.5}" text-anchor="end" fill="#6F817D" font-family="IBM Plex Mono,monospace" font-size="8.5">${s}</text>`;
+  }
+  g+=`<text x="52" y="${H-6}" text-anchor="middle" fill="#6F817D" font-family="Archivo,sans-serif" font-size="8.5" letter-spacing="1">M</text>`;
+  g+=`<text x="133" y="${H-6}" text-anchor="middle" fill="#6F817D" font-family="Archivo,sans-serif" font-size="8.5" letter-spacing="1">SAMPLE</text>`;
+  let i=0;
+  for(const a of ASSAYS){
+    const r=p[a.k];
+    if(r.pos){
+      const yy=y(r.len);
+      g+=`<rect class="band" style="animation-delay:${i*70}ms" x="96" y="${yy-2.3}" width="74" height="4.6" rx="2" fill="#DCF6EE"/>`;
+      g+=`<rect class="band" style="animation-delay:${i*70}ms" x="96" y="${yy-4.6}" width="74" height="9.2" rx="4" fill="#9FE3D2" opacity=".22"/>`;
+      g+=`<text class="band" style="animation-delay:${i*70}ms" x="178" y="${yy+3}" fill="#8FD8C7" font-family="IBM Plex Mono,monospace" font-size="8">${a.k}</text>`;
+      i++;
+    }
+  }
+  return g+"</svg>";
+}
+function alnHtml(primer,site,label){
+  if(!site)return "";
+  let g="";
+  for(let k=0;k<primer.length;k++){
+    const same=site.gseq[k]===primer[k];
+    const term=k===primer.length-1;
+    g+=`<span class="${same?(term?"term":""):"mm"+(term?" term":"")}">${site.gseq[k]}</span>`;
+  }
+  return `${label}  primer  5'-${primer}-3'\n${" ".repeat(label.length)}  genome  5'-${g}-3'`;
+}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+function render(res,idx){
+  const p=res.pcr,cl=res.call,se=res.sero;
+  const col=`var(${CLADECOL[cl.sub||cl.clade]||"--cNone"})`;
+  const sero=(se.O||se.H)?`${se.O||"O?"}:${se.H||"H?"}`:null;
+  const lin=res.lin;
+  const tags=[lin.fimH,sero].filter(Boolean).join(" · ");
+  let h=`<div class="card" id="sample-${idx}"><div class="top"><div class="gelbox">${gel(p)}</div><div class="main">`;
+  h+=`<div class="fname"><span class="no">${String(idx).padStart(2,"0")}</span><span class="mono">${esc(res.file)}</span></div>`;
+  h+=`<div class="verdict"><span class="v" style="color:${col}">${esc(cl.sub||cl.clade)}</span>`;
+  if(tags)h+=`<span class="sero mono">${esc(tags)}</span>`;
+  h+=`<span class="chip" style="background:${col}">${res.mlst.st==="131"?"ST131":(res.mlst.st?("ST"+res.mlst.st):"ST unresolved")}</span></div>`;
+  h+=`<div class="meta"><span>Contigs <b>${res.nctg}</b></span><span>Total <b>${res.bp.toLocaleString()}</b> bp</span><span>Run time <b>${res.ms}</b> ms</span></div>`;
+  for(const n of cl.notes)h+=`<div class="note">${esc(n)}</div>`;
+  if(res.mlst.st&&res.mlst.st!=="131")h+=`<div class="note">MLST resolved to ST${esc(res.mlst.st)}. This assay was designed for ST131, so treat the clade call as indicative only.</div>`;
+
+  h+=`<div class="scroll" style="margin-top:16px"><table><thead><tr><th>Assay</th><th>Expected</th><th>Observed</th><th>Call</th></tr></thead><tbody>`;
+  const row=a=>{const r=p[a.k];return `<tr><td>${esc(a.name)}</td><td class="mono">${a.size} bp</td><td class="mono">${r.pos?r.len+" bp":"—"}</td><td><span class="pill ${r.pos?"y":"n"}">${r.pos?"positive":"negative"}</span></td></tr>`;};
+  h+=`<tr class="grp"><td colspan="4"><span>ST131 clade assay — single reaction, Matsumura et al. 2017</span></td></tr>`;
+  for(const a of ASSAYS)h+=row(a);
+  h+=`<tr class="grp"><td colspan="4"><span>Supplementary reactions</span></td></tr>`;
+  for(const a of EXTRA)h+=row(a);
+  h+=`<tr class="grp"><td colspan="4"><span>fimH and subclone assays — Johnson et al. 2022</span></td></tr>`;
+  for(const a of SUBCLONE)h+=row(a);
+  h+=`</tbody></table></div>`;
+
+  let any=false,det="";
+  for(const a of ALLASSAYS()){
+    const r=p[a.k];
+    if(!r.pos)continue;
+    any=true;
+    det+=`<div class="aln">${esc(a.k)} — ${esc(a.name)}  [${esc(r.contig)}]  ${r.len} bp\n`+
+         alnHtml(a.F,r.F,"F")+"\n"+alnHtml(a.R,r.R,"R")+"\n</div>";
+  }
+  if(any)h+=`<details><summary>Show primer alignments (underline = 3&prime; terminal base, amber = mismatch)</summary>${det}</details>`;
+  h+=`</div></div>`;
+
+  h+=`<div class="nomen"><h4>The same isolate across the defining studies</h4>`;
+  for(const r of lin.rows){
+    const dim=/^(n\/a|non-H30$)/.test(r.val)?" dim":"";
+    h+=`<div class="nrow"><div class="ref">${esc(r.tag)}<em>${esc(r.src)}</em></div>`+
+       `<div class="val${dim}">${esc(r.val)}</div><div class="why">${esc(r.note)}</div></div>`;
+  }
+  h+=`</div>`;
+
+  h+=`<div class="panels">`;
+  h+=`<div class="panel"><h4>Typing</h4>`;
+  for(const g of Object.keys(res.mlst.alleles))
+    h+=`<div class="kv"><span><i>${g}</i></span><span class="mono">${res.mlst.alleles[g]?esc(res.mlst.alleles[g]):"not found"}</span></div>`;
+  h+=`<div class="kv"><span><b>ST</b></span><span class="mono"><b>${res.mlst.st?esc(res.mlst.st):"unresolved"}</b></span></div>`;
+  h+=`<div class="kv"><span>O antigen</span><span class="mono">${se.O?esc(se.O)+(se.Oid&&se.Oid<1?` <span class="wt">(${(se.Oid*100).toFixed(1)}%)</span>`:""):"not determined"}</span></div>`;
+  h+=`<div class="kv"><span>H antigen</span><span class="mono">${se.H?esc(se.H)+(se.Hid&&se.Hid<1?` <span class="wt">(${(se.Hid*100).toFixed(1)}%)</span>`:""):"not determined"}</span></div>`;
+  h+=`<div class="kv"><span><i>fimH</i></span><span class="mono">${lin.fimH?esc(lin.fimH):(lin.fimHgroup?`<span class="wt" style="font-size:11.5px">${esc(lin.fimHgroup)}</span>`:"not H30/H22/H41")}</span></div>`;
+  h+=`</div>`;
+
+  const q=res.qrdr;
+  h+=`<div class="panel"><h4>QRDR substitutions</h4>`;
+  if(q.gyrA){
+    const m83=q.gyrA.c83!=="S",m87=q.gyrA.c87!=="D";
+    h+=`<div class="kv"><span>GyrA 83</span><span class="mono ${m83?"mut":"wt"}">${m83?`S83${q.gyrA.c83}`:"S (wild type)"}</span></div>`;
+    h+=`<div class="kv"><span>GyrA 87</span><span class="mono ${m87?"mut":"wt"}">${m87?`D87${q.gyrA.c87}`:"D (wild type)"}</span></div>`;
+  } else h+=`<div class="kv"><span>GyrA</span><span class="mono">not found</span></div>`;
+  if(q.parC){
+    const m80=q.parC.c80!=="S",m84=q.parC.c84!=="E";
+    h+=`<div class="kv"><span>ParC 80</span><span class="mono ${m80?"mut":"wt"}">${m80?`S80${q.parC.c80}`:"S (wild type)"}</span></div>`;
+    h+=`<div class="kv"><span>ParC 84</span><span class="mono ${m84?"mut":"wt"}">${m84?`E84${q.parC.c84}`:"E (wild type)"}</span></div>`;
+  } else h+=`<div class="kv"><span>ParC</span><span class="mono">not found</span></div>`;
+  const nmut=(q.gyrA?((q.gyrA.c83!=="S")+(q.gyrA.c87!=="D")):0)+(q.parC?((q.parC.c80!=="S")+(q.parC.c84!=="E")):0);
+  h+=`<div class="kv"><span>Predicted phenotype</span><span>${nmut>=3?"<b>fluoroquinolone resistant</b>":(nmut>0?"reduced susceptibility":"susceptible")}</span></div>`;
+  h+=`</div>`;
+
+  h+=`<div class="panel"><h4>Acquired resistance genes</h4>`;
+  if(res.amr.length===0)h+=`<div class="kv"><span>none detected</span><span></span></div>`;
+  else for(const a of res.amr.slice(0,14))
+    h+=`<div class="kv"><span class="mono">${esc(a.gene.replace(/_[0-9]+$/,""))}</span><span class="mono">${(a.id*100).toFixed(2)}%</span></div>`;
+  const esbl=res.amr.filter(a=>/^blaCTX-M/.test(a.gene)&&a.id>=0.999).map(a=>a.gene.replace(/_[0-9]+$/,""));
+  if(esbl.length){
+    const extra=/CTX-M-27$/.test(esbl[0])?" This is the ESBL associated with C1-M27.":(/CTX-M-15$/.test(esbl[0])?" This is the ESBL associated with C2.":"");
+    h+=`<div style="margin-top:10px;font-size:12.5px;color:var(--ink-2)">${esc(esbl.join(", "))} detected at 100% identity.${extra}</div>`;
+  }
+  h+=`</div></div></div>`;
+  return h;
+}
+function renderSummary(){
+  const box=document.getElementById("summary");
+  if(RESULTS.length<2){box.classList.remove("on");box.innerHTML="";return;}
+  let h=`<h3>Run summary</h3><p>${RESULTS.length} isolates, most recent first. Click a file name to jump to its card.</p>`;
+  h+=`<div class="scroll"><table><thead><tr><th>Run</th><th>File</th><th>Clade</th><th>fimH</th><th>Serotype</th><th>ST</th><th>GyrA / ParC</th><th>Resistance genes</th></tr></thead><tbody>`;
+  RESULTS.map((r,i)=>({r,n:i+1})).reverse().forEach(({r,n})=>{
+    const col=`var(${CLADECOL[r.call.clade]||"--cNone"})`,q=r.qrdr,se=r.sero||{};
+    const gA=q.gyrA?([q.gyrA.c83!=="S"?`S83${q.gyrA.c83}`:null,q.gyrA.c87!=="D"?`D87${q.gyrA.c87}`:null].filter(Boolean).join("+")||"WT"):"—";
+    const pC=q.parC?([q.parC.c80!=="S"?`S80${q.parC.c80}`:null,q.parC.c84!=="E"?`E84${q.parC.c84}`:null].filter(Boolean).join("+")||"WT"):"—";
+    const nm=(q.gyrA?((q.gyrA.c83!=="S")+(q.gyrA.c87!=="D")):0)+(q.parC?((q.parC.c80!=="S")+(q.parC.c84!=="E")):0);
+    const genes=r.amr.length?r.amr.slice(0,3).map(a=>esc(a.gene.replace(/_[0-9]+$/,""))).join(", ")+(r.amr.length>3?` +${r.amr.length-3} more`:""):"—";
+    const sero=(se.O||se.H)?`${se.O||"O?"}:${se.H||"H?"}`:"—";
+    h+=`<tr><td class="seq">${String(n).padStart(2,"0")}</td>`+
+       `<td><a href="#sample-${n}" class="mono" style="color:var(--ink)">${esc(r.file)}</a></td>`+
+       `<td><span class="cldot" style="background:${col}"></span><b style="color:${col}">${esc(r.call.sub||r.call.clade)}</b></td>`+
+       `<td class="mono">${esc((r.lin&&r.lin.fimH)||"—")}</td>`+
+       `<td class="mono">${esc(sero)}</td>`+
+       `<td class="mono">${r.mlst.st?esc(r.mlst.st):"—"}</td>`+
+       `<td class="mono ${nm>=3?"mut":"wt"}">${gA} / ${pC}</td>`+
+       `<td>${genes}</td></tr>`;
+  });
+  box.innerHTML=h+`</tbody></table></div>`;
+  box.classList.add("on");
+}
+
+/* ============================ driver ============================ */
+let DB=null,RESULTS=[];
+async function loadDB(){
+  if(DB)return DB;
+  const b64=document.getElementById("dbz").textContent.trim();
+  const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const ds=new DecompressionStream("gzip");
+  const txt=await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
+  DB=JSON.parse(txt);
+  return DB;
+}
+const yield_=()=>new Promise(r=>setTimeout(r,0));
+function prog(pct,msg){document.getElementById("status").classList.add("on");document.getElementById("pbar").style.width=pct+"%";document.getElementById("pstat").textContent=msg;}
+
+async function analyze(file){
+  const t0=performance.now();
+  const txt=await file.text();
+  const contigs=parseFasta(txt);
+  if(!contigs.length)throw new Error("no sequence found in this file");
+  const bp=contigs.reduce((a,c)=>a+c.seq.length,0);
+  prog(22,`${file.name}: running clade PCR…`); await yield_();
+  const p={};
+  for(const a of ALLASSAYS())p[a.k]=pcr(a,contigs);
+  prog(42,`${file.name}: matching MLST alleles…`); await yield_();
+  const ml=mlst(DB,contigs);
+  prog(60,`${file.name}: reading QRDR codons…`); await yield_();
+  const q=qrdr(contigs);
+  prog(72,`${file.name}: indexing genome…`); await yield_();
+  const bits=bloomOfGenome(contigs);
+  prog(80,`${file.name}: serotyping…`); await yield_();
+  const sero=serotype(DB,bits,contigs,p.O25b.pos,p);
+  prog(88,`${file.name}: screening resistance genes…`); await yield_();
+  const amr=amrScan(DB,contigs,bits);
+  const call=callClade(p,ml.st);
+  const lin=lineage(p,q,call);
+  for(const n of lin.notes)call.notes.push(n);
+  if(sero.note)call.notes.push(sero.note);
+  if(bp<3500000)call.notes.unshift(`At ${bp.toLocaleString()} bp this is smaller than an E. coli genome (roughly 4.6–5.3 Mb). Check that the whole assembly was loaded — negative assays may simply reflect missing sequence.`);
+  else if(bp>7000000)call.notes.unshift(`At ${bp.toLocaleString()} bp this is larger than an E. coli genome. The file may contain more than one isolate.`);
+  return {file:file.name,nctg:contigs.length,bp,pcr:p,call,mlst:ml,qrdr:q,amr,sero,lin,ms:Math.round(performance.now()-t0)};
+}
+async function run(files){
+  await loadDB();
+  /* browsers hand over multi-file selections in an arbitrary order, so fix a deterministic one */
+  files=[...files].sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:"base"}));  /* deterministic analysis order */
+  for(let i=0;i<files.length;i++){
+    prog(5+i/files.length*90,`Reading ${files[i].name}…`); await yield_();
+    const n=RESULTS.length+1;
+    try{
+      const r=await analyze(files[i]);
+      RESULTS.push(r);
+      document.getElementById("results").insertAdjacentHTML("afterbegin",render(r,n));
+      renderSummary();
+    }catch(e){
+      document.getElementById("results").insertAdjacentHTML("afterbegin",
+        `<div class="card"><div class="main" style="padding:20px 22px"><div class="fname"><span class="no">${String(n).padStart(2,"0")}</span><span class="mono">${esc(files[i].name)}</span></div><div class="note">Could not analyse this file: ${esc(e.message)}. Check that it is FASTA — a header line starting with &gt; followed by nucleotide sequence.</div></div></div>`);
+    }
+  }
+  prog(100,`Done — ${RESULTS.length} isolate${RESULTS.length===1?"":"s"} analysed`);
+  setTimeout(()=>document.getElementById("status").classList.remove("on"),1200);
+  document.getElementById("tools").style.display=RESULTS.length?"flex":"none";
+}
+document.getElementById("verline").textContent =
+  `Version ${VERSION.v}  ·  built ${VERSION.built}  ·  algorithm sha256 ${VERSION.algo.slice(0,16)}…  ·  database sha256 ${VERSION.db.slice(0,16)}…`;
+const drop=document.getElementById("drop"),fi=document.getElementById("file");
+document.getElementById("pick").onclick=e=>{e.stopPropagation();fi.click();};
+drop.onclick=()=>fi.click();
+drop.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click();}};
+fi.onchange=()=>{if(fi.files.length)run([...fi.files]);};
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",e=>{const f=[...e.dataTransfer.files];if(f.length)run(f);});
+
+function buildCSV(){
+  const cols=["run","file","tool_version","clade_Matsumura2017","subclade_B0_B1","Price2013","Petty2014","BenZakour2016","Stoesser2016","fimH","O","H","ST","adk","fumC","gyrB","icd","mdh","purA","recA","gyrA83","gyrA87","parC80","parC84","AMR"]
+    .concat(ALLASSAYS().map(a=>a.k+"_bp"));
+  const rows=[cols.join(",")];
+  RESULTS.forEach((r,i)=>{
+    const q=r.qrdr,a=r.mlst.alleles,se=r.sero||{};
+    const L=r.lin||{rows:[]};const g=n=>{const x=L.rows.find(z=>z.tag.indexOf(n)===0);return x?x.val:"";};
+    const v=[i+1,r.file,VERSION.v,r.call.clade,r.call.sub||"",g("Price"),g("Petty"),g("Ben Zakour"),g("Stoesser"),L.fimH||"",se.O||"",se.H||"",r.mlst.st||"",a.adk||"",a.fumC||"",a.gyrB||"",a.icd||"",a.mdh||"",a.purA||"",a.recA||"",
+      q.gyrA?q.gyrA.c83:"",q.gyrA?q.gyrA.c87:"",q.parC?q.parC.c80:"",q.parC?q.parC.c84:"",
+      r.amr.map(x=>x.gene.replace(/_[0-9]+$/,"")).join(" ")]
+      .concat(ALLASSAYS().map(x=>r.pcr[x.k].pos?r.pcr[x.k].len:""));
+    rows.push(v.map(x=>/[",\n]/.test(String(x))?'"'+String(x).replace(/"/g,'""')+'"':x).join(","));
+  });
+  return rows.join("\n");
+}
+let EXPORT={name:"st131finder_results.csv",type:"text/csv;charset=utf-8",text:""};
+let DL=undefined;                                   /* downloads capability, resolved lazily */
+function msg(t,warn){
+  const el=document.getElementById("dlmsg");
+  el.textContent=t||""; el.classList.toggle("warn",!!warn);
+  if(t)setTimeout(()=>{if(el.textContent===t){el.textContent="";el.classList.remove("warn");}},6000);
+}
+function showExport(label,name,type,text){
+  EXPORT={name,type,text};
+  document.getElementById("expname").textContent=label;
+  document.getElementById("exptext").value=text;
+  const box=document.getElementById("exp");
+  box.classList.add("on");
+  box.scrollIntoView({block:"nearest"});
+}
+function blobSave(name,text,type){
+  try{
+    const pre=type.startsWith("text/csv")?"﻿":"";
+    const b=new Blob([pre+text],{type}),u=URL.createObjectURL(b);
+    const a=document.createElement("a");
+    a.href=u; a.download=name; a.rel="noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),1500);
+    return true;
+  }catch(_){ return false; }
+}
+async function download(label,name,type,text){
+  EXPORT={name,type,text};
+  if(DL===undefined) DL=(window.claude&&window.claude.use)?await window.claude.use("downloads"):null;
+  if(DL){
+    try{
+      const pre=type.startsWith("text/csv")?"﻿":"";
+      await DL.save({filename:name,data:pre+text});
+      msg(`${label} saved.`);
+      return;
+    }catch(e){
+      const c=e&&e.code;
+      if(c==="declined"){ msg("Download cancelled."); return; }
+      if(c==="rate_limited"){ msg("A save prompt is already open — try again in a moment.",true); return; }
+      if(c==="too_large"){ msg(`${label} is too large to save (16 MiB limit). Use “Show as text”.`,true); showExport(label,name,type,text); return; }
+      /* anything else: fall through to the ordinary browser download */
+    }
+  }
+  if(blobSave(name,text,type)){ msg(`${label} saved to your downloads folder.`); return; }
+  msg("This viewer blocks downloads — copy the text instead.",true);
+  showExport(label,name,type,text);
+}
+document.getElementById("csv").onclick=()=>download("CSV","st131finder_results.csv","text/csv;charset=utf-8",buildCSV());
+document.getElementById("json").onclick=()=>download("JSON","st131finder_results.json","application/json",JSON.stringify({tool:"ST131Finder",version:VERSION,generated:new Date().toISOString(),results:RESULTS},null,2));
+document.getElementById("showtext").onclick=()=>showExport("CSV","st131finder_results.csv","text/csv;charset=utf-8",buildCSV());
+document.getElementById("expclose").onclick=()=>document.getElementById("exp").classList.remove("on");
+document.getElementById("expcopy").onclick=async e=>{
+  const b=e.target;
+  try{ await navigator.clipboard.writeText(EXPORT.text); b.textContent="Copied"; }
+  catch(_){ const t=document.getElementById("exptext"); t.focus(); t.select(); b.textContent="Press Ctrl/Cmd+C"; }
+  setTimeout(()=>{b.textContent="Copy to clipboard";},2200);
+};
+document.getElementById("clear").onclick=()=>{RESULTS=[];document.getElementById("results").innerHTML="";document.getElementById("tools").style.display="none";document.getElementById("exp").classList.remove("on");msg("");renderSummary();};
+</script>

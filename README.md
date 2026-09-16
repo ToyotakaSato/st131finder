@@ -5,6 +5,8 @@ Everything runs in the browser — sequence data never leaves the machine. The o
 resource the page requests is a web-font stylesheet, fetched once at load; it works offline
 without it, using system fonts.
 
+[![DOI](https://zenodo.org/badge/1372266641.svg)](https://doi.org/10.5281/zenodo.22780646)
+
 ▶ **Run it now, no installation:** https://toyotakasato.github.io/st131finder/
 
 Every isolate is reported under each of the five studies that define ST131 population
@@ -110,6 +112,27 @@ database is embedded, so no network access is needed.
 repository root named `index.html`, then set Settings → Pages to branch `main`, folder
 `/ (root)`. The tool is then served at `https://<user>.github.io/<repo>/` with no running costs
 and nothing to maintain.
+
+## Building from source
+
+Everything needed to rebuild the released file byte for byte is in `src/`.
+
+```bash
+cd src
+python3 build_release.py --check ../st131finder-v1.3.0.html
+```
+
+```
+release file  97114e1c8e6b9b7106a8f9699125ea0bcbf93e073f3e2f2478953a57b3a52ab0
+algorithm     c775cb3c1f9b275e5b89bd4d8bc5c2d883decb84cd9af4ce34c9e6b8fa5cf76d
+db.json       89e9166a635090c044669978cc47568d73595e044e403542b7ceb9a6f3f2479a
+
+OK: rebuild is byte-identical to ../st131finder-v1.3.0.html
+```
+
+Python 3.9 or later; no third-party packages. See `src/README.md` for how the
+build is made deterministic and why `db.json` is shipped directly rather than
+re-downloaded.
 
 ## Requirements
 

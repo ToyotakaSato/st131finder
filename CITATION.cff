@@ -10,10 +10,10 @@ abstract: >-
 type: software
 license: MIT
 version: 1.3.0
-date-released: "YYYY-MM-DD"
+date-released: "2026-09-16"
 repository-code: "https://github.com/ToyotakaSato/st131finder"
 url: "https://toyotakasato.github.io/st131finder/"
-doi: "10.5281/zenodo.CONCEPT"
+doi: "10.5281/zenodo.22780646"
 keywords:
   - Escherichia coli
   - ST131
